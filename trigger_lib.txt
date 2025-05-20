@@ -1,0 +1,42 @@
+DROP TRIGGER IF EXISTS trg_Library_Update;
+DROP TRIGGER IF EXISTS trg_Library_Update_Fine;
+DROP TABLE IF EXISTS Library_Audit;
+
+CREATE TABLE Library_Audit (
+    bid INT,
+    bname VARCHAR(100),
+    noc INT,
+    timestampofquery DATETIME,
+    fine INT DEFAULT 0
+);
+
+DELIMITER $$
+
+CREATE TRIGGER trg_Library_Update
+AFTER INSERT ON Library
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'ISSUE' THEN
+        INSERT INTO Library_Audit (bid, bname, noc, timestampofquery, fine)
+        VALUES (NEW.bid, NEW.bname, -1, NOW(), 0);
+    ELSEIF NEW.status = 'RETURN' THEN
+        INSERT INTO Library_Audit (bid, bname, noc, timestampofquery, fine)
+        VALUES (NEW.bid, NEW.bname, 1, NOW(), 0);
+    END IF;
+END$$
+
+CREATE TRIGGER trg_Library_Update_Fine
+AFTER UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    DECLARE days_diff INT;
+    SET days_diff = DATEDIFF(CURDATE(), NEW.doi);
+
+    IF days_diff > 20 THEN
+        UPDATE Library SET status = 'FINE' WHERE bid = NEW.bid;
+        INSERT INTO Library_Audit (bid, bname, noc, timestampofquery, fine)
+        VALUES (NEW.bid, NEW.bname, 0, NOW(), days_diff * 10);
+    END IF;
+END$$
+
+DELIMITER ;

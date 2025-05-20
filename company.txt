@@ -1,0 +1,106 @@
+-- STEP 1: Create tables
+
+CREATE TABLE EMPLOYEE (
+    Fname VARCHAR2(20),
+    Minit CHAR(1),
+    Lname VARCHAR2(20),
+    Ssn CHAR(9) PRIMARY KEY,
+    Bdate DATE,
+    Address VARCHAR2(100),
+    Sex CHAR(1),
+    Salary NUMBER(10,2),
+    Dno NUMBER
+);
+
+CREATE TABLE DEPARTMENT (
+    Dname VARCHAR2(30),
+    Dno NUMBER PRIMARY KEY,
+    Mgr_ssn CHAR(9),
+    Mgr_start_date DATE
+);
+
+CREATE TABLE DEPT_LOCATIONS (
+    Dnumber NUMBER,
+    Dlocation VARCHAR2(50),
+    PRIMARY KEY (Dnumber, Dlocation)
+);
+
+CREATE TABLE PROJECT (
+    Pname VARCHAR2(30),
+    Pnumber NUMBER PRIMARY KEY,
+    Plocation VARCHAR2(50),
+    Dno NUMBER
+);
+
+CREATE TABLE WORKS_ON (
+    Essn CHAR(9),
+    Pno NUMBER,
+    Hours NUMBER(3,1),
+    PRIMARY KEY (Essn, Pno)
+);
+
+CREATE TABLE DEPENDENT (
+    Essn CHAR(9),
+    Dependent_name VARCHAR2(20),
+    Sex CHAR(1),
+    Bdate DATE,
+    Relationship VARCHAR2(20),
+    PRIMARY KEY (Essn, Dependent_name)
+);
+
+-- STEP 2: Sample inserts (optional, minimal data just for queries)
+
+INSERT INTO EMPLOYEE VALUES ('John', 'A', 'Smith', '123456789', TO_DATE('1980-01-15', 'YYYY-MM-DD'), '123 Main St, Houston, TX', 'M', 60000, 1);
+INSERT INTO EMPLOYEE VALUES ('Mary', 'B', 'Johnson', '987654321', TO_DATE('1975-05-20', 'YYYY-MM-DD'), '456 Oak Ave, Stafford, TX', 'F', 75000, 2);
+INSERT INTO EMPLOYEE VALUES ('James', 'C', 'Williams', '111223333', TO_DATE('1982-07-07', 'YYYY-MM-DD'), '789 Pine Rd, Houston, TX', 'M', 58000, 1);
+
+INSERT INTO DEPARTMENT VALUES ('Research', 1, '123456789', TO_DATE('2010-01-01', 'YYYY-MM-DD'));
+INSERT INTO DEPARTMENT VALUES ('Administration', 2, '222334444', TO_DATE('2012-03-01', 'YYYY-MM-DD'));
+
+INSERT INTO DEPT_LOCATIONS VALUES (1, 'Houston');
+INSERT INTO DEPT_LOCATIONS VALUES (2, 'Stafford');
+
+INSERT INTO PROJECT VALUES ('ProductX', 10, 'Stafford', 1);
+INSERT INTO PROJECT VALUES ('ProductY', 20, 'Houston', 2);
+
+INSERT INTO WORKS_ON VALUES ('123456789', 10, 20);
+INSERT INTO WORKS_ON VALUES ('987654321', 20, 15);
+
+COMMIT;
+
+-- STEP 3: Queries
+
+-- 3.1 For every project located in 'Stafford', list:
+--      project number, controlling department number, 
+--      department manager’s last name, address, and birth date
+
+SELECT p.Pnumber, p.Dno, e.Lname, e.Address, e.Bdate
+FROM PROJECT p
+JOIN DEPARTMENT d ON p.Dno = d.Dno
+JOIN EMPLOYEE e ON d.Mgr_ssn = e.Ssn
+WHERE p.Plocation = 'Stafford';
+
+-- 3.2 List all project numbers for projects involving an employee whose last name is 'Smith',
+--      either as a worker or as a manager of controlling department
+
+SELECT DISTINCT p.Pnumber
+FROM PROJECT p
+LEFT JOIN WORKS_ON w ON p.Pnumber = w.Pno
+LEFT JOIN EMPLOYEE e1 ON w.Essn = e1.Ssn
+LEFT JOIN DEPARTMENT d ON p.Dno = d.Dno
+LEFT JOIN EMPLOYEE e2 ON d.Mgr_ssn = e2.Ssn
+WHERE (e1.Lname = 'Smith') OR (e2.Lname = 'Smith');
+
+-- 3.3 Retrieve all employees whose address is in Houston, Texas
+
+SELECT * FROM EMPLOYEE
+WHERE Address LIKE '%Houston%';
+
+-- 3.4 Show resulting salaries if every employee working on 'ProductX' project
+--      is given a 10 percent raise
+
+SELECT e.Ssn, e.Fname, e.Lname, e.Salary, ROUND(e.Salary * 1.10, 2) AS New_Salary
+FROM EMPLOYEE e
+JOIN WORKS_ON w ON e.Ssn = w.Essn
+JOIN PROJECT p ON w.Pno = p.Pnumber
+WHERE p.Pname = 'ProductX';
