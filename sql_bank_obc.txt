@@ -1,0 +1,68 @@
+-- STEP 1: Create Tables with Constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- STEP 2: Insert Sample Data
+
+INSERT INTO Branch VALUES ('SBI', 'Pune'), ('OBC', 'Mumbai');
+
+INSERT INTO Customers VALUES ('ABC', 'Pune'), ('XYZ', 'Mumbai');
+
+INSERT INTO Deposit VALUES (1001, 'ABC', 'SBI', 20000.00, '2024-03-15');
+INSERT INTO Deposit VALUES (1002, 'XYZ', 'OBC', 15000.00, '2024-05-01');
+
+INSERT INTO Borrow VALUES (201, 'ABC', 'SBI', 50000.00);
+INSERT INTO Borrow VALUES (202, 'XYZ', 'OBC', 30000.00);
+
+-- STEP 3: Query 1 - Display account date of customers “ABC”
+
+SELECT adate 
+FROM Deposit 
+WHERE cname = 'ABC';
+
+-- STEP 4: Query 2 - Modify size of amount in Deposit (only possible if no data exceeds limit)
+
+ALTER TABLE Deposit MODIFY amount DECIMAL(12,2);
+
+-- STEP 5: Query 3 - Display customers living in city Pune
+
+SELECT cname 
+FROM Customers 
+WHERE city = 'Pune';
+
+-- STEP 6: Query 4 - Display city of branch “OBC”
+
+SELECT city 
+FROM Branch 
+WHERE bname = 'OBC';
+
+-- STEP 7: Query 5 - Find number of tuples in customer relation
+
+SELECT COUNT(*) AS total_customers FROM Customers;

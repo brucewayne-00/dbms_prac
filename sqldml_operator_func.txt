@@ -1,0 +1,84 @@
+-- STEP 1: Create tables
+
+CREATE TABLE Account (
+    Acc_no NUMBER PRIMARY KEY,
+    branch_name VARCHAR2(30),
+    balance NUMBER(10,2)
+);
+
+CREATE TABLE Branch (
+    branch_name VARCHAR2(30) PRIMARY KEY,
+    branch_city VARCHAR2(30),
+    assets NUMBER(15,2)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR2(50) PRIMARY KEY,
+    cust_street VARCHAR2(50),
+    cust_city VARCHAR2(30)
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR2(50),
+    acc_no NUMBER,
+    PRIMARY KEY (cust_name, acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no NUMBER PRIMARY KEY,
+    branch_name VARCHAR2(30),
+    amount NUMBER(10,2)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR2(50),
+    loan_no NUMBER,
+    PRIMARY KEY (cust_name, loan_no)
+);
+
+-- STEP 2: Sample data inserts
+
+INSERT INTO Branch VALUES ('Downtown', 'New York', 5000000);
+INSERT INTO Branch VALUES ('Midtown', 'New York', 3000000);
+INSERT INTO Branch VALUES ('Uptown', 'New York', 4000000);
+
+INSERT INTO Account VALUES (101, 'Downtown', 15000);
+INSERT INTO Account VALUES (102, 'Downtown', 10000);
+INSERT INTO Account VALUES (103, 'Midtown', 20000);
+INSERT INTO Account VALUES (104, 'Uptown', 8000);
+
+INSERT INTO Customer VALUES ('Alice', '1st Ave', 'New York');
+INSERT INTO Customer VALUES ('Bob', '2nd St', 'New York');
+INSERT INTO Customer VALUES ('Charlie', '3rd Blvd', 'New York');
+
+INSERT INTO Depositor VALUES ('Alice', 101);
+INSERT INTO Depositor VALUES ('Bob', 102);
+INSERT INTO Depositor VALUES ('Bob', 103);
+INSERT INTO Depositor VALUES ('Charlie', 104);
+
+COMMIT;
+
+-- STEP 3: Queries
+
+-- 3.1 Find average account balance at each branch
+SELECT branch_name, ROUND(AVG(balance), 2) AS avg_balance
+FROM Account
+GROUP BY branch_name;
+
+-- 3.2 Find number of depositors at each branch
+SELECT a.branch_name, COUNT(DISTINCT d.cust_name) AS num_depositors
+FROM Account a
+JOIN Depositor d ON a.Acc_no = d.acc_no
+GROUP BY a.branch_name;
+
+-- 3.3 Find branches where average account balance > 12000
+SELECT branch_name
+FROM (
+    SELECT branch_name, AVG(balance) AS avg_balance
+    FROM Account
+    GROUP BY branch_name
+)
+WHERE avg_balance > 12000;
+
+-- 3.4 Find number of tuples in customer relation
+SELECT COUNT(*) AS total_customers FROM Customer;

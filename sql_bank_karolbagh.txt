@@ -1,0 +1,78 @@
+-- STEP 1: Create tables with PK and FK constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR2(30) PRIMARY KEY,
+    city VARCHAR2(30) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR2(50) PRIMARY KEY,
+    city VARCHAR2(30) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno NUMBER PRIMARY KEY,
+    cname VARCHAR2(50) NOT NULL,
+    bname VARCHAR2(30) NOT NULL,
+    amount NUMBER(10,2) CHECK(amount >= 0),
+    adate DATE NOT NULL,
+    CONSTRAINT fk_deposit_customer FOREIGN KEY (cname) REFERENCES Customers(cname),
+    CONSTRAINT fk_deposit_branch FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno NUMBER PRIMARY KEY,
+    cname VARCHAR2(50) NOT NULL,
+    bname VARCHAR2(30) NOT NULL,
+    amount NUMBER(10,2) CHECK(amount > 0),
+    CONSTRAINT fk_borrow_customer FOREIGN KEY (cname) REFERENCES Customers(cname),
+    CONSTRAINT fk_borrow_branch FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- STEP 2: Insert sample data
+
+INSERT INTO Branch VALUES ('KAROLBAGH', 'Delhi');
+INSERT INTO Branch VALUES ('PUNE', 'Pune');
+INSERT INTO Branch VALUES ('BANER', 'Pune');
+
+INSERT INTO Customers VALUES ('Anil', 'Delhi');
+INSERT INTO Customers VALUES ('Sunil', 'Pune');
+INSERT INTO Customers VALUES ('Ravi', 'Pune');
+INSERT INTO Customers VALUES ('Mohan', 'Delhi');
+
+INSERT INTO Deposit VALUES (101, 'Anil', 'KAROLBAGH', 5000, TO_DATE('15-JAN-1998', 'DD-MON-YYYY'));
+INSERT INTO Deposit VALUES (102, 'Sunil', 'PUNE', 7000, TO_DATE('10-FEB-1999', 'DD-MON-YYYY'));
+INSERT INTO Deposit VALUES (103, 'Ravi', 'BANER', 9000, TO_DATE('20-MAR-1998', 'DD-MON-YYYY'));
+INSERT INTO Deposit VALUES (104, 'Mohan', 'KAROLBAGH', 6000, TO_DATE('01-JAN-1997', 'DD-MON-YYYY'));
+
+INSERT INTO Borrow VALUES (201, 'Anil', 'KAROLBAGH', 15000);
+INSERT INTO Borrow VALUES (202, 'Sunil', 'PUNE', 12000);
+INSERT INTO Borrow VALUES (203, 'Ravi', 'BANER', 17000);
+
+-- STEP 3: Queries
+
+-- 3.1 Display amount for depositors living in the city where Anil is living
+
+SELECT d.amount 
+FROM Deposit d 
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Anil');
+
+-- 3.2 Display total loan and maximum loan taken from KAROLBAGH branch
+
+SELECT SUM(amount) AS total_loan, MAX(amount) AS max_loan
+FROM Borrow
+WHERE bname = 'KAROLBAGH';
+
+-- 3.3 Display total deposit of customers having account date later than '1-JAN-98'
+
+SELECT SUM(amount) AS total_deposit
+FROM Deposit
+WHERE adate > TO_DATE('01-JAN-1998', 'DD-MON-YYYY');
+
+-- 3.4 Display maximum deposit of customers living in PUNE
+
+SELECT MAX(d.amount) AS max_deposit
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = 'Pune';

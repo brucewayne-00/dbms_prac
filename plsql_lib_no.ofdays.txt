@@ -1,0 +1,55 @@
+-- STEP 1: PL/SQL Block to calculate fine and update status
+
+DECLARE
+    v_roll_no Borrower.Rollin%TYPE;
+    v_book_name Borrower.NameofBook%TYPE;
+    v_date_of_issue Borrower.DateofIssue%TYPE;
+    v_status Borrower.Status%TYPE;
+    v_days NUMBER;
+    v_fine_amt NUMBER := 0;
+    v_today DATE := SYSDATE;
+BEGIN
+    -- Accept inputs (simulate user input via bind variables or substitution variables)
+    v_roll_no := &roll_no;
+    v_book_name := '&book_name';
+
+    -- Fetch issue date and current status
+    SELECT DateofIssue, Status INTO v_date_of_issue, v_status
+    FROM Borrower
+    WHERE Rollin = v_roll_no AND NameofBook = v_book_name;
+
+    -- Calculate days difference
+    v_days := TRUNC(v_today) - TRUNC(v_date_of_issue);
+
+    -- Check for status and calculate fine
+    IF v_status = 'I' THEN
+        IF v_days BETWEEN 15 AND 30 THEN
+            v_fine_amt := v_days * 5;
+        ELSIF v_days > 30 THEN
+            v_fine_amt := (30 * 5) + ((v_days - 30) * 50);
+        END IF;
+
+        -- Update status to Returned 'R'
+        UPDATE Borrower
+        SET Status = 'R'
+        WHERE Rollin = v_roll_no AND NameofBook = v_book_name;
+
+        -- Insert fine details if fine applicable
+        IF v_fine_amt > 0 THEN
+            INSERT INTO Fine (Roll_no, Date, Amt)
+            VALUES (v_roll_no, v_today, v_fine_amt);
+        END IF;
+
+        COMMIT;
+        DBMS_OUTPUT.PUT_LINE('Book returned. Fine amount: Rs. ' || v_fine_amt);
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Book is not currently issued or already returned.');
+    END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('No record found for Roll No: ' || v_roll_no || ' and Book: ' || v_book_name);
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/

@@ -1,0 +1,88 @@
+-- Create Tables
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(30) PRIMARY KEY,
+    branch_city VARCHAR(30) NOT NULL,
+    assets DECIMAL(15,2) CHECK (assets >= 0)
+);
+
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(30) NOT NULL,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR(50) PRIMARY KEY,
+    cust_street VARCHAR(50) NOT NULL,
+    cust_city VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR(50),
+    acc_no INT,
+    PRIMARY KEY (cust_name, acc_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (acc_no) REFERENCES Account(acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(30) NOT NULL,
+    amount DECIMAL(10,2) CHECK (amount > 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR(50),
+    loan_no INT,
+    PRIMARY KEY (cust_name, loan_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Insert Sample Data
+
+INSERT INTO Branch VALUES ('Akurdi', 'Pune', 1500000.00);
+INSERT INTO Branch VALUES ('Hadapsar', 'Pune', 1200000.00);
+
+INSERT INTO Customer VALUES ('Alice', 'Street A', 'Pune');
+INSERT INTO Customer VALUES ('Bob', 'Street B', 'Mumbai');
+INSERT INTO Customer VALUES ('Charlie', 'Street C', 'Pune');
+
+INSERT INTO Account VALUES (1, 'Akurdi', 20000.00);
+INSERT INTO Account VALUES (2, 'Hadapsar', 15000.00);
+
+INSERT INTO Depositor VALUES ('Alice', 1);
+INSERT INTO Depositor VALUES ('Bob', 2);
+
+INSERT INTO Loan VALUES (101, 'Akurdi', 50000.00);
+INSERT INTO Loan VALUES (102, 'Hadapsar', 30000.00);
+
+INSERT INTO Borrower VALUES ('Alice', 101);
+INSERT INTO Borrower VALUES ('Charlie', 102);
+
+-- Queries
+
+-- 1. Customers with account OR loan OR both
+SELECT cust_name FROM Depositor
+UNION
+SELECT cust_name FROM Borrower;
+
+-- 2. Customers with both account AND loan
+SELECT d.cust_name
+FROM Depositor d
+JOIN Borrower b ON d.cust_name = b.cust_name;
+
+-- 3. Customers with account BUT no loan
+SELECT cust_name
+FROM Depositor
+WHERE cust_name NOT IN (
+    SELECT cust_name FROM Borrower
+);
+
+-- 4. Average account balance at Akurdi branch
+SELECT AVG(balance) AS avg_balance
+FROM Account
+WHERE branch_name = 'Akurdi';

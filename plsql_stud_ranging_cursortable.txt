@@ -1,0 +1,40 @@
+-- 29: Procedure to count students by percentage ranges in a given course
+
+CREATE OR REPLACE PROCEDURE Count_Students_By_Percentage (
+    p_course_code IN Student.COURSE_COD%TYPE
+) IS
+    v_100_70  NUMBER := 0;
+    v_69_60   NUMBER := 0;
+    v_59_50   NUMBER := 0;
+    v_below_49 NUMBER := 0;
+BEGIN
+    SELECT
+        COUNT(CASE WHEN percentage BETWEEN 70 AND 100 THEN 1 END),
+        COUNT(CASE WHEN percentage BETWEEN 60 AND 69 THEN 1 END),
+        COUNT(CASE WHEN percentage BETWEEN 50 AND 59 THEN 1 END),
+        COUNT(CASE WHEN percentage < 50 THEN 1 END)
+    INTO
+        v_100_70, v_69_60, v_59_50, v_below_49
+    FROM Student
+    WHERE course_cod = p_course_code;
+
+    DBMS_OUTPUT.PUT_LINE('Course Code: ' || p_course_code);
+    DBMS_OUTPUT.PUT_LINE('Students with 70-100%: ' || v_100_70);
+    DBMS_OUTPUT.PUT_LINE('Students with 60-69% : ' || v_69_60);
+    DBMS_OUTPUT.PUT_LINE('Students with 50-59% : ' || v_59_50);
+    DBMS_OUTPUT.PUT_LINE('Students below 50%    : ' || v_below_49);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('No students found for course ' || p_course_code);
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/
+
+
+
+
+
+//how to Run
+SET SERVEROUTPUT ON;
+EXEC Count_Students_By_Percentage('CS101');  -- replace 'CS101' with your course code

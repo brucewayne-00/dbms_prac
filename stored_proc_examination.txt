@@ -1,0 +1,34 @@
+CREATE OR REPLACE PROCEDURE proc_Grade IS
+  CURSOR cur_students IS
+    SELECT rownum AS Roll, name, total_marks FROM Stud_Marks;
+    
+  v_class VARCHAR2(20);
+BEGIN
+  FOR rec IN cur_students LOOP
+    IF rec.total_marks BETWEEN 990 AND 1500 THEN
+      v_class := 'Distinction';
+    ELSIF rec.total_marks BETWEEN 900 AND 989 THEN
+      v_class := 'First Class';
+    ELSIF rec.total_marks BETWEEN 825 AND 899 THEN
+      v_class := 'Higher Second Class';
+    ELSE
+      v_class := 'No Category';
+    END IF;
+    
+    INSERT INTO Result (Roll, Name, Class)
+    VALUES (rec.Roll, rec.name, v_class);
+  END LOOP;
+  
+  COMMIT;
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+    ROLLBACK;
+END;
+/
+
+
+
+
+//how to Run
+EXEC proc_Grade;

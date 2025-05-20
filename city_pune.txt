@@ -1,0 +1,66 @@
+
+db.Citydetails.insertMany([
+  {
+    _id: 1,
+    name: "Pune",
+    area: 331.3,
+    population: { total: 7000000, Adults: 5000000, seniorcitizens: 800000, sexratio: 940 },
+    geography: { avgtemp: 24.5, avgrainfall: 722, longitude: 73.8567, latitude: 18.5204 }
+  },
+  {
+    _id: 2,
+    name: "Mumbai",
+    area: 603.4,
+    population: { total: 20400000, Adults: 15000000, seniorcitizens: 2500000, sexratio: 950 },
+    geography: { avgtemp: 27.2, avgrainfall: 2422, longitude: 72.8777, latitude: 19.0760 }
+  },
+  {
+    _id: 3,
+    name: "Delhi",
+    area: 1484,
+    population: { total: 16787941, Adults: 12000000, seniorcitizens: 2000000, sexratio: 920 },
+    geography: { avgtemp: 25.0, avgrainfall: 800, longitude: 77.1025, latitude: 28.7041 }
+  }
+]);
+
+
+1. Find the total population in Pune
+db.Citydetails.find(
+  { name: "Pune" },
+  { _id: 0, name: 1, "population.total": 1 }
+)
+
+2. Return all cities with total population greater than 10 million
+db.Citydetails.find(
+  { "population.total": { $gt: 10000000 } },
+  { _id: 0, name: 1, "population.total": 1 }
+)
+
+3. Return the average population for all cities
+db.Citydetails.aggregate([
+  {
+    $group: {
+      _id: null,
+      avgPopulation: { $avg: "$population.total" }
+    }
+  }
+])
+
+4. Return the minimum and maximum cities by population
+
+a) Get minimum and maximum population values:
+db.Citydetails.aggregate([
+  {
+    $group: {
+      _id: null,
+      minPopulation: { $min: "$population.total" },
+      maxPopulation: { $max: "$population.total" }
+    }
+  }
+])
+
+b) Get the city with minimum population:
+db.Citydetails.find().sort({ "population.total": 1 }).limit(1)
+
+c) Get the city with maximum population:
+db.Citydetails.find().sort({ "population.total": -1 }).limit(1)

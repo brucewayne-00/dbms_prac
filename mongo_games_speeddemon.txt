@@ -1,0 +1,21 @@
+// STEP 1: Create collection 'games' and insert 5 game documents
+
+db.games.insertMany([
+  { name: "GameA", gametype: "Action", score: 85, achievements: ["Game Master", "Speed Demon"] },
+  { name: "GameB", gametype: "Puzzle", score: 78, achievements: ["Speed Demon"] },
+  { name: "GameC", gametype: "Adventure", score: 92, achievements: ["Game Master"] },
+  { name: "GameD", gametype: "Action", score: 88, achievements: ["Game Master", "Speed Demon", "Champion"] },
+  { name: "GameE", gametype: "Strategy", score: 74, achievements: ["Beginner"] }
+]);
+
+// STEP 2: Query all games
+
+db.games.find().pretty();
+
+// STEP 3: Query 3 highest scored games (sorted by score descending, limit 3)
+
+db.games.find().sort({ score: -1 }).limit(3);
+
+// STEP 4: Query all games that have both 'Game Master' AND 'Speed Demon' achievements
+
+db.games.find({ achievements: { $all: ["Game Master", "Speed Demon"] } }).pretty();

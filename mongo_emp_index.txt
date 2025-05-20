@@ -1,0 +1,58 @@
+// STEP 1: Create sample Employee documents
+
+db.Employee.insertMany([
+  { emp_id: 1, emp_name: "Alice", emp_dept: "HR", salary: 5000 },
+  { emp_id: 2, emp_name: "Bob", emp_dept: "IT", salary: 7000 },
+  { emp_id: 3, emp_name: "Charlie", emp_dept: "HR", salary: 5500 },
+  { emp_id: 4, emp_name: "David", emp_dept: "IT", salary: 6000 },
+  { emp_id: 5, emp_name: "Eve", emp_dept: "Finance", salary: 7500 }
+]);
+
+// STEP 2: Aggregation - Total salary of all employees
+
+db.Employee.aggregate([
+  { $group: { _id: null, totalSalary: { $sum: "$salary" } } }
+]);
+
+// STEP 3: Aggregation - Average salary per department
+
+db.Employee.aggregate([
+  { $group: { _id: "$emp_dept", avgSalary: { $avg: "$salary" } } }
+]);
+
+// STEP 4: Aggregation - Max and Min salary per department
+
+db.Employee.aggregate([
+  { $group: { 
+      _id: "$emp_dept", 
+      maxSalary: { $max: "$salary" }, 
+      minSalary: { $min: "$salary" } 
+    } 
+  }
+]);
+
+// STEP 5: Aggregation - Count employees in each department
+
+db.Employee.aggregate([
+  { $group: { _id: "$emp_dept", empCount: { $sum: 1 } } }
+]);
+
+// STEP 6: Create single-field index on emp_name (ascending)
+
+db.Employee.createIndex({ emp_name: 1 });
+
+// STEP 7: Create compound index on emp_dept (ascending) and salary (descending)
+
+db.Employee.createIndex({ emp_dept: 1, salary: -1 });
+
+// STEP 8: Create a unique index on emp_id to prevent duplicate employee IDs
+
+db.Employee.createIndex({ emp_id: 1 }, { unique: true });
+
+// STEP 9: Create a text index on emp_name for text search
+
+db.Employee.createIndex({ emp_name: "text" });
+
+// STEP 10: Query example using index (Find employees in IT department with salary > 6000)
+
+db.Employee.find({ emp_dept: "IT", salary: { $gt: 6000 } }).hint({ emp_dept: 1, salary: -1 });

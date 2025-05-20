@@ -1,0 +1,64 @@
+-- STEP 1: Create table Employee_salary
+CREATE TABLE Employee_salary (
+    emp_no NUMBER PRIMARY KEY,
+    basic NUMBER(10,2) NOT NULL,
+    HRA NUMBER(10,2) NOT NULL,
+    DA NUMBER(10,2) NOT NULL,
+    Total_deduction NUMBER(10,2) DEFAULT 0,
+    net_salary NUMBER(10,2),
+    gross_salary NUMBER(10,2)
+);
+
+-- STEP 2: Insert sample data
+INSERT INTO Employee_salary (emp_no, basic, HRA, DA) VALUES (101, 50000, 12000, 15000);
+INSERT INTO Employee_salary (emp_no, basic, HRA, DA) VALUES (102, 40000, 10000, 12000);
+INSERT INTO Employee_salary (emp_no, basic, HRA, DA) VALUES (103, 30000, 8000, 10000);
+COMMIT;
+
+-- STEP 3: PL/SQL block to calculate tax and display emp name and tax
+DECLARE
+    v_emp_no Employee_salary.emp_no%TYPE;
+    v_basic Employee_salary.basic%TYPE;
+    v_HRA Employee_salary.HRA%TYPE;
+    v_DA Employee_salary.DA%TYPE;
+    v_gross_salary Employee_salary.gross_salary%TYPE;
+    v_total_deduction Employee_salary.Total_deduction%TYPE;
+    v_net_salary Employee_salary.net_salary%TYPE;
+    v_tax NUMBER(10,2);
+BEGIN
+    FOR rec IN (SELECT emp_no, basic, HRA, DA, Total_deduction FROM Employee_salary) LOOP
+        v_emp_no := rec.emp_no;
+        v_basic := rec.basic;
+        v_HRA := rec.HRA;
+        v_DA := rec.DA;
+        v_total_deduction := rec.Total_deduction;
+
+        -- Calculate gross salary
+        v_gross_salary := v_basic + v_HRA + v_DA;
+
+        -- Calculate tax based on net salary (gross - deductions)
+        v_net_salary := v_gross_salary - v_total_deduction;
+
+        IF v_net_salary <= 25000 THEN
+            v_tax := 0;
+        ELSIF v_net_salary <= 50000 THEN
+            v_tax := v_net_salary * 0.05;
+        ELSIF v_net_salary <= 100000 THEN
+            v_tax := v_net_salary * 0.10;
+        ELSE
+            v_tax := v_net_salary * 0.20;
+        END IF;
+
+        -- Update gross_salary and net_salary in table
+        UPDATE Employee_salary
+        SET gross_salary = v_gross_salary,
+            net_salary = v_net_salary
+        WHERE emp_no = v_emp_no;
+
+        -- Display employee no and tax
+        DBMS_OUTPUT.PUT_LINE('Employee No: ' || v_emp_no || ' | Tax: ' || TO_CHAR(v_tax,'999999.99'));
+    END LOOP;
+
+    COMMIT;
+END;
+/

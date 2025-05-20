@@ -1,0 +1,32 @@
+-- STEP 1: Drop existing triggers and create audit table
+DROP TRIGGER IF EXISTS trg_Library_Update_Audit;
+DROP TRIGGER IF EXISTS trg_Library_Delete_Audit;
+
+CREATE TABLE IF NOT EXISTS Library_Audit (
+    bid INT,
+    bname VARCHAR(100),
+    doi DATE,
+    status VARCHAR(20),
+    operation VARCHAR(10),       -- 'UPDATE' or 'DELETE'
+    audit_timestamp DATETIME
+);
+
+-- STEP 2: Create BEFORE UPDATE trigger
+DELIMITER $$
+CREATE TRIGGER trg_Library_Update_Audit
+BEFORE UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (bid, bname, doi, status, operation, audit_timestamp)
+    VALUES (OLD.bid, OLD.bname, OLD.doi, OLD.status, 'UPDATE', NOW());
+END$$
+
+-- STEP 3: Create BEFORE DELETE trigger
+CREATE TRIGGER trg_Library_Delete_Audit
+BEFORE DELETE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (bid, bname, doi, status, operation, audit_timestamp)
+    VALUES (OLD.bid, OLD.bname, OLD.doi, OLD.status, 'DELETE', NOW());
+END$$
+DELIMITER ;

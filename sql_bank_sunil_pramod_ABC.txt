@@ -1,0 +1,74 @@
+-- STEP 1: Create Tables with Constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- STEP 2: Insert Sample Data
+
+INSERT INTO Branch VALUES ('SBI', 'Pune'), ('OBC', 'Mumbai'), ('PNB', 'Pune');
+
+INSERT INTO Customers VALUES ('Sunil', 'Pune'), ('Pramod', 'Mumbai'), ('ABC', 'Pune'), ('XYZ', 'Mumbai');
+
+INSERT INTO Deposit VALUES (101, 'Sunil', 'SBI', 2000.00, '2025-04-10');
+INSERT INTO Deposit VALUES (102, 'Pramod', 'OBC', 1200.00, '2025-04-15');
+INSERT INTO Deposit VALUES (103, 'ABC', 'PNB', 900.00, '2025-05-01');
+
+INSERT INTO Borrow VALUES (201, 'Sunil', 'SBI', 5000.00);
+INSERT INTO Borrow VALUES (202, 'Pramod', 'OBC', 3000.00);
+INSERT INTO Borrow VALUES (203, 'ABC', 'PNB', 4000.00);
+INSERT INTO Borrow VALUES (204, 'XYZ', 'OBC', 3500.00);
+
+-- STEP 3: Query 1 - Display loan no and loan amount of borrowers having the same branch as that of Sunil
+
+SELECT loanno, amount
+FROM Borrow
+WHERE bname = (SELECT bname FROM Borrow WHERE cname = 'Sunil');
+
+-- STEP 4: Query 2 - Display deposit and loan details of customers in the city where Pramod is living
+
+SELECT d.cname, d.actno, d.amount AS deposit_amount, b.loanno, b.amount AS loan_amount
+FROM Customers c
+LEFT JOIN Deposit d ON c.cname = d.cname
+LEFT JOIN Borrow b ON c.cname = b.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Pramod');
+
+-- STEP 5: Query 3 - Display borrower names having deposit amount > 1000 and living city same as Pramod
+
+SELECT DISTINCT b.cname
+FROM Borrow b
+JOIN Deposit d ON b.cname = d.cname
+JOIN Customers c ON b.cname = c.cname
+WHERE d.amount > 1000 AND c.city = (SELECT city FROM Customers WHERE cname = 'Pramod');
+
+-- STEP 6: Query 4 - Display branch and living city of ‘ABC’
+
+SELECT d.bname, c.city
+FROM Customers c
+LEFT JOIN Deposit d ON c.cname = d.cname
+WHERE c.cname = 'ABC';

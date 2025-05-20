@@ -1,0 +1,80 @@
+//mapreduce
+// STEP 1: Use your database
+use schoolDB;
+
+// STEP 2: Sample collection
+db.Students.insertMany([
+  { stud_id: 1, stud_name: "Amit", stud_addr: "Pune", stud_marks: 80 },
+  { stud_id: 2, stud_name: "Riya", stud_addr: "Mumbai", stud_marks: 90 },
+  { stud_id: 3, stud_name: "Jay", stud_addr: "Pune", stud_marks: 90 },
+  { stud_id: 4, stud_name: "Neha", stud_addr: "Delhi", stud_marks: 70 }
+]);
+
+// STEP 3: Map Function
+var mapFunction = function () {
+  emit(this.stud_marks, 1);
+};
+
+// STEP 4: Reduce Function
+var reduceFunction = function (key, values) {
+  return Array.sum(values);
+};
+
+// STEP 5: Run MapReduce
+db.Students.mapReduce(
+  mapFunction,
+  reduceFunction,
+  {
+    out: "MarksCount"
+  }
+);
+
+// STEP 6: View results
+db.MarksCount.find();
+
+
+
+
+
+//plsql
+-- STEP 1: Create Table
+CREATE TABLE Student (
+    rollno NUMBER PRIMARY KEY,
+    name VARCHAR2(50),
+    marks1 NUMBER,
+    marks2 NUMBER,
+    marks3 NUMBER,
+    marks4 NUMBER
+);
+
+-- STEP 2: Insert Sample Data
+INSERT INTO Student VALUES (1, 'Amit', 85, 90, 80, 95);
+INSERT INTO Student VALUES (2, 'Riya', 70, 75, 80, 85);
+
+-- STEP 3: PL/SQL Code to calculate total and percentage
+DECLARE
+    v_rollno Student.rollno%TYPE := &enter_rollno;
+    v_name Student.name%TYPE;
+    m1 Student.marks1%TYPE;
+    m2 Student.marks2%TYPE;
+    m3 Student.marks3%TYPE;
+    m4 Student.marks4%TYPE;
+    total NUMBER;
+    percent NUMBER(5,2);
+BEGIN
+    SELECT name, marks1, marks2, marks3, marks4 INTO v_name, m1, m2, m3, m4
+    FROM Student WHERE rollno = v_rollno;
+
+    total := m1 + m2 + m3 + m4;
+    percent := total / 4;
+
+    DBMS_OUTPUT.PUT_LINE('Name: ' || v_name);
+    DBMS_OUTPUT.PUT_LINE('Total Marks: ' || total);
+    DBMS_OUTPUT.PUT_LINE('Percentage: ' || percent || '%');
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Student not found.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/

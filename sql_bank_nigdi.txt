@@ -1,0 +1,86 @@
+-- STEP 1: Create Tables
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(30) PRIMARY KEY,
+    branch_city VARCHAR(30) NOT NULL,
+    assets DECIMAL(15,2) CHECK (assets >= 0)
+);
+
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(30),
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR(50) PRIMARY KEY,
+    cust_street VARCHAR(50),
+    cust_city VARCHAR(30)
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR(50),
+    acc_no INT,
+    PRIMARY KEY (cust_name, acc_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (acc_no) REFERENCES Account(acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(30),
+    amount DECIMAL(10,2) CHECK (amount > 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR(50),
+    loan_no INT,
+    PRIMARY KEY (cust_name, loan_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- STEP 2: Insert Sample Data
+
+INSERT INTO Branch VALUES ('Nigdi', 'Pune', 900000.00);
+INSERT INTO Branch VALUES ('Akurdi', 'Pune', 1200000.00);
+
+INSERT INTO Customer VALUES ('Alice', 'MG Road', 'Pune');
+INSERT INTO Customer VALUES ('Bob', 'FC Road', 'Pune');
+
+INSERT INTO Account VALUES (101, 'Nigdi', 18000.00);
+INSERT INTO Account VALUES (102, 'Akurdi', 22000.00);
+
+INSERT INTO Depositor VALUES ('Alice', 101);
+INSERT INTO Depositor VALUES ('Bob', 102);
+
+INSERT INTO Loan VALUES (1, 'Nigdi', 1400.00);
+INSERT INTO Loan VALUES (2, 'Nigdi', 1700.00);
+INSERT INTO Loan VALUES (3, 'Akurdi', 15000.00);
+
+INSERT INTO Borrower VALUES ('Alice', 1);
+INSERT INTO Borrower VALUES ('Bob', 3);
+
+-- STEP 3: Query 1 - Calculate total loan amount
+
+SELECT SUM(amount) AS total_loan_amount FROM Loan;
+
+-- STEP 4: Query 2 - Delete all loans with amount between 1300 and 1500
+
+DELETE FROM Loan WHERE amount BETWEEN 1300 AND 1500;
+
+-- STEP 5: Query 3 - Delete all tuples at every branch located in 'Nigdi'
+
+DELETE FROM Borrower WHERE loan_no IN (
+    SELECT loan_no FROM Loan WHERE branch_name = 'Nigdi'
+);
+
+DELETE FROM Depositor WHERE acc_no IN (
+    SELECT acc_no FROM Account WHERE branch_name = 'Nigdi'
+);
+
+DELETE FROM Account WHERE branch_name = 'Nigdi';
+DELETE FROM Loan WHERE branch_name = 'Nigdi';
+DELETE FROM Branch WHERE branch_name = 'Nigdi';

@@ -1,0 +1,45 @@
+DROP VIEW IF EXISTS EmpDeptView, DeptProjectView;
+DROP TABLE IF EXISTS Works_On, Project, Employee, Department;
+DROP INDEX IF EXISTS EmployeeId;
+
+CREATE TABLE Department (
+    DeptID INT PRIMARY KEY,
+    DeptName VARCHAR(100) NOT NULL,
+    Location VARCHAR(100)
+);
+
+CREATE TABLE Employee (
+    EmployeeID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Salary DECIMAL(10,2),
+    DeptID INT,
+    FOREIGN KEY (DeptID) REFERENCES Department(DeptID)
+);
+
+CREATE TABLE Project (
+    ProjectID INT PRIMARY KEY,
+    ProjectName VARCHAR(100) NOT NULL,
+    DeptID INT,
+    FOREIGN KEY (DeptID) REFERENCES Department(DeptID)
+);
+
+CREATE TABLE Works_On (
+    EmployeeID INT,
+    ProjectID INT,
+    Hours DECIMAL(5,2),
+    PRIMARY KEY (EmployeeID, ProjectID),
+    FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY (ProjectID) REFERENCES Project(ProjectID)
+);
+
+CREATE VIEW EmpDeptView AS
+SELECT e.EmployeeID, e.Name, d.DeptName, d.Location
+FROM Employee e
+JOIN Department d ON e.DeptID = d.DeptID;
+
+CREATE VIEW DeptProjectView AS
+SELECT d.DeptID, d.DeptName, p.ProjectID, p.ProjectName
+FROM Department d
+JOIN Project p ON d.DeptID = p.DeptID;
+
+CREATE INDEX EmployeeId ON Employee(DeptID ASC, EmployeeID ASC);

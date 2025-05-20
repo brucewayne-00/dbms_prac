@@ -1,0 +1,82 @@
+// Step 1: Insert sample documents
+db.Citydetails.insertMany([
+  {
+    _id: 1,
+    name: "Pune",
+    area: 500,
+    population: {
+      total: 7000000,
+      Adults: 5000000,
+      seniorcitizens: 1000000,
+      sexratio: 950
+    },
+    geography: {
+      avgtemp: 25,
+      avgrainfall: 70,
+      longitude: 73.8567,
+      latitude: 18.5204
+    }
+  },
+  {
+    _id: 2,
+    name: "Mumbai",
+    area: 600,
+    population: {
+      total: 20000000,
+      Adults: 15000000,
+      seniorcitizens: 2000000,
+      sexratio: 920
+    },
+    geography: {
+      avgtemp: 27,
+      avgrainfall: 220,
+      longitude: 72.8777,
+      latitude: 19.0760
+    }
+  },
+  {
+    _id: 3,
+    name: "Delhi",
+    area: 550,
+    population: {
+      total: 18000000,
+      Adults: 14000000,
+      seniorcitizens: 1500000,
+      sexratio: 900
+    },
+    geography: {
+      avgtemp: 26,
+      avgrainfall: 80,
+      longitude: 77.1025,
+      latitude: 28.7041
+    }
+  }
+]);
+
+// 1. Find area-wise total population and sort them in increasing order
+db.Citydetails.aggregate([
+  {
+    $group: {
+      _id: "$area",
+      totalPopulation: { $sum: "$population.total" }
+    }
+  },
+  { $sort: { totalPopulation: 1 } }
+]);
+
+// 2. Retrieve name and area where average rainfall is greater than 60
+db.Citydetails.find(
+  { "geography.avgrainfall": { $gt: 60 } },
+  { _id: 0, name: 1, area: 1 }
+);
+
+// 3. Create index on city (name) and area, then find max population in Mumbai
+db.Citydetails.createIndex({ name: 1, area: 1 });
+
+db.Citydetails.find(
+  { name: "Mumbai" },
+  { _id: 0, name: 1, "population.total": 1 }
+).sort({ "population.total": -1 }).limit(1);
+
+// 4. Create index on name
+db.Citydetails.createIndex({ name: 1 });

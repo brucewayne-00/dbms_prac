@@ -1,0 +1,76 @@
+-- STEP 1: Drop tables if they exist
+DROP TABLE IF EXISTS Result;
+DROP TABLE IF EXISTS Student;
+
+-- STEP 2: Create Student table
+CREATE TABLE Student (
+    rollno INT PRIMARY KEY,
+    name VARCHAR(100),
+    Marks1 INT,
+    Marks2 INT,
+    Marks3 INT,
+    Marks4 INT,
+    Marks5 INT
+);
+
+-- STEP 3: Create Result table
+CREATE TABLE Result (
+    rollno INT PRIMARY KEY,
+    total_marks INT,
+    class VARCHAR(20)
+);
+
+-- STEP 4: Create function to calculate total marks and validate marks
+DELIMITER $$
+
+CREATE FUNCTION CalculateTotalMarks(rno INT) RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE m1, m2, m3, m4, m5 INT;
+    DECLARE total INT;
+    
+    SELECT Marks1, Marks2, Marks3, Marks4, Marks5 INTO m1, m2, m3, m4, m5 FROM Student WHERE rollno = rno;
+    
+    IF m1 < 0 OR m2 < 0 OR m3 < 0 OR m4 < 0 OR m5 < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Negative marks entered!';
+    END IF;
+    
+    IF m1 > 100 OR m2 > 100 OR m3 > 100 OR m4 > 100 OR m5 > 100 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Marks more than 100 entered!';
+    END IF;
+    
+    SET total = m1 + m2 + m3 + m4 + m5;
+    RETURN total;
+END$$
+
+-- STEP 5: Create procedure to classify student and insert result
+CREATE PROCEDURE ClassifyStudent(rno INT)
+BEGIN
+    DECLARE total INT;
+    DECLARE class VARCHAR(20);
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Exception handling: print error message and exit
+        SELECT CONCAT('Invalid marks detected for rollno: ', rno) AS ErrorMessage;
+        LEAVE BEGIN;
+    END;
+    
+    SET total = CalculateTotalMarks(rno);
+    
+    IF total BETWEEN 990 AND 1499 THEN
+        SET class = 'Distinction';
+    ELSEIF total BETWEEN 900 AND 899 THEN
+        SET class = 'First Class';
+    ELSEIF total BETWEEN 825 AND 899 THEN
+        SET class = 'Higher Second';
+    ELSEIF total BETWEEN 750 AND 824 THEN
+        SET class = 'Second';
+    ELSE
+        SET class = 'Pass';
+    END IF;
+    
+    INSERT INTO Result(rollno, total_marks, class) VALUES (rno, total, class);
+END$$
+
+DELIMITER ;

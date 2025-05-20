@@ -1,0 +1,50 @@
+-- STEP 1: Drop existing objects if they exist
+DROP VIEW borrower_view;
+DROP SEQUENCE borrower_seq;
+DROP SYNONYM borrower_synonym;
+DROP INDEX idx_borrower_rollin;
+DROP TABLE Borrower;
+
+-- STEP 2: Create Borrower table with constraints
+CREATE TABLE Borrower (
+    Rollin NUMBER PRIMARY KEY,
+    Name VARCHAR2(100) NOT NULL,
+    DateofIssue DATE NOT NULL,
+    NameofBook VARCHAR2(100) NOT NULL,
+    Status CHAR(1) CHECK (Status IN ('I', 'R'))
+);
+
+-- STEP 3: Create sequence for Rollin
+CREATE SEQUENCE borrower_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+-- STEP 4: Create index on Rollin
+CREATE INDEX idx_borrower_rollin ON Borrower(Rollin);
+
+-- STEP 5: Create view to show issued books only
+CREATE VIEW borrower_view AS
+SELECT Rollin, Name, NameofBook, DateofIssue
+FROM Borrower
+WHERE Status = 'I';
+
+-- STEP 6: Create synonym for Borrower table
+CREATE SYNONYM borrower_synonym FOR Borrower;
+
+-- STEP 7: Insert sample records using sequence
+INSERT INTO Borrower (Rollin, Name, DateofIssue, NameofBook, Status) 
+VALUES (borrower_seq.NEXTVAL, 'Alice', TO_DATE('2025-05-01', 'YYYY-MM-DD'), 'Oracle Database Concepts', 'I');
+
+INSERT INTO Borrower (Rollin, Name, DateofIssue, NameofBook, Status) 
+VALUES (borrower_seq.NEXTVAL, 'Bob', TO_DATE('2025-04-20', 'YYYY-MM-DD'), 'PL/SQL Programming', 'R');
+
+-- STEP 8: Select all borrowers
+SELECT * FROM Borrower;
+
+-- STEP 9: Select from view (only issued books)
+SELECT * FROM borrower_view;
+
+-- STEP 10: Use synonym to select all
+SELECT * FROM borrower_synonym;

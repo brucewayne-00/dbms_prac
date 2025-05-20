@@ -1,0 +1,30 @@
+// ===== STEP 1: Use or Create Database =====
+use shopDB;
+
+// ===== STEP 2: Create and Insert Documents =====
+db.Orders.insertMany([
+  { cust_id: 101, amount: 5000, status: "Pending" },
+  { cust_id: 102, amount: 7500, status: "Shipped" },
+  { cust_id: 103, amount: 2000, status: "Delivered" },
+  { cust_id: 104, amount: 6000, status: "Pending" }
+]);
+
+// ===== STEP 3: Read Operations =====
+db.Orders.find();  // 3.1: View all orders
+db.Orders.find({ status: "Pending" });  // 3.2: Orders with status 'Pending'
+db.Orders.find({ cust_id: 102 });  // 3.3: Order for cust_id 102
+
+// ===== STEP 4: Update Operations =====
+db.Orders.updateOne(  // 4.1: Change status of cust_id 101
+  { cust_id: 101 },
+  { $set: { status: "Shipped" } }
+);
+
+db.Orders.updateOne(  // 4.2: Increase amount for cust_id 103
+  { cust_id: 103 },
+  { $inc: { amount: 1000 } }
+);
+
+// ===== STEP 5: Delete Operations =====
+db.Orders.deleteOne({ cust_id: 102 });  // 5.1: Delete cust_id 102
+db.Orders.deleteMany({ status: "Delivered" });  // 5.2: Delete all 'Delivered' orders
